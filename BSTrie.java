@@ -38,16 +38,4 @@ public class BSTrie {
 			}
 		}
 	}
-
-	public void printLex() { // Prints out all words in the provided BSTrie and all subtrees
-		if (word != null) {
-			if (left != null) {
-				left.printLex();
-			}
-			System.out.println(word);
-			if (right != null) {
-				right.printLex();
-			}
-		}
-	}
 }
