@@ -6,11 +6,6 @@ public class Bitpacker {
 
 	public static void main(String[] args) throws Exception {
 		int dictionaryIndex = 0;
-		BSTrie root = new BSTrie((byte) 0, 0);
-		BSTrie current = root;
-		boolBST temp = null;
-		BSTrie temp2 = null;
-		byte inputByte = 0;
 
 		//input
 		FileInputStream readFile = new FileInputStream("encoded.txt");
