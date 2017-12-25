@@ -1,9 +1,9 @@
-public class tuple {
+public class Tuple {
 
 	int ref;
 	byte data;
 
-	public tuple(int r, byte d) {
+	public Tuple(int r, byte d) {
 		ref = r;
 		data = d;
 	}
