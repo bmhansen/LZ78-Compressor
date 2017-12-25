@@ -7,13 +7,8 @@ public class Bitpacker {
 	public static void main(String[] args) throws Exception {
 		int dictionaryIndex = 0;
 
-		//input
-		FileInputStream readFile = new FileInputStream("encoded.txt");
-
-		//output
-		File writeFile = new File("BitPacked.lz78");
-		FileOutputStream output = new FileOutputStream(writeFile);
-		writeFile.createNewFile();
+		InputStream input = System.in;
+		PrintStream output = System.out;
 
 		int i = 0;
 		int addAnotherBit = 2;
@@ -24,10 +19,10 @@ public class Bitpacker {
 		int ref = 0;
 		byte data = 0;
 
-		while ((i = readFile.read()) != -1 || dictionaryIndex < 2) {
-			ref = ((byte) i & 0xFF) << 24 | ((byte) readFile.read() & 0xFF) << 16 | ((byte) readFile.read() & 0xFF) << 8
-					| ((byte) readFile.read() & 0xFF);
-			data = (byte) readFile.read();
+		while ((i = input.read()) != -1 || dictionaryIndex < 2) {
+			ref = ((byte) i & 0xFF) << 24 | ((byte) input.read() & 0xFF) << 16 | ((byte) input.read() & 0xFF) << 8
+					| ((byte) input.read() & 0xFF);
+			data = (byte) input.read();
 
 			System.out.println(ref + " " + data);
 
@@ -53,8 +48,5 @@ public class Bitpacker {
 
 			dictionaryIndex++;
 		}
-
-		output.close();
-		readFile.close();
 	}
 }

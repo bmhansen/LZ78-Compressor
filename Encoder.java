@@ -13,15 +13,10 @@ public class Encoder {
 		int i = 0;
 		byte inputByte = 0;
 
-		//input
-		FileInputStream readFile = new FileInputStream("wow.pdf");
+		InputStream input = System.in;
+		PrintStream output = System.out;
 
-		//output
-		File writeFile = new File("encoded.txt");
-		FileOutputStream output = new FileOutputStream(writeFile);
-		writeFile.createNewFile();
-
-		while ((i = readFile.read()) != -1) { // while there are bytes to read
+		while ((i = input.read()) != -1) { // while there are bytes to read
 			inputByte = (byte) i;
 			if (current.link != null) { // if it has a link to search for matches in
 				temp = current.link.find(inputByte);// search for a match
