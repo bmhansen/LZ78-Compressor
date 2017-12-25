@@ -20,21 +20,21 @@ public class BSTrie {
 		link = null;
 	}
 
-	public boolBST find(byte tofind) { // if found, returns the true and the BSTrie containing the word
+	public BoolBST find(byte tofind) { // if found, returns the true and the BSTrie containing the word
 		// if not found, returns false and the BSTrie parent of where it should be inserted
 		if (word == tofind) {
-			return new boolBST(true, this);
+			return new BoolBST(true, this);
 		} else if (tofind < word) {
 			if (left != null) {
 				return left.find(tofind);
 			} else {
-				return new boolBST(false, this);
+				return new BoolBST(false, this);
 			}
 		} else { // (tofind > word)
 			if (right != null) {
 				return right.find(tofind);
 			} else {
-				return new boolBST(false, this);
+				return new BoolBST(false, this);
 			}
 		}
 	}

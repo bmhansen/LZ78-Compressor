@@ -1,9 +1,9 @@
-public class boolBST {
+public class BoolBST {
 
 	boolean bool;
 	BSTrie bst;
 
-	public boolBST(boolean b, BSTrie bs) {
+	public BoolBST(boolean b, BSTrie bs) {
 		bool = b;
 		bst = bs;
 	}

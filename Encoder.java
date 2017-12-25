@@ -8,7 +8,7 @@ public class Encoder {
 		int dictionaryIndex = 1;
 		BSTrie root = new BSTrie((byte) 0, 0);
 		BSTrie current = root;
-		boolBST temp = null;
+		BoolBST temp = null;
 		BSTrie temp2 = null;
 		int i = 0;
 		byte inputByte = 0;
