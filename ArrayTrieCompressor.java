@@ -39,7 +39,7 @@ public class ArrayTrieCompressor {
     // if we are part-way through a sequence when input ended
     // then output the previous sequences index plus the latest byte of data
     if (currentAT != root){
-      outputIntByte(currentIndex, inputByte);
+      outputIntByte(previousIndex, inputByte);
     }
   }
 

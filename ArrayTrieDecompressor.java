@@ -15,11 +15,20 @@ public class ArrayTrieDecompressor {
     byte data = 0;
     Stack<Byte> byteSequence = new Stack<Byte>();
 
-    // while there are bytes to read 0(0,""),1(0,a),2(0,b),3(1,b)
+    // while there are bytes to read
     for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
       // gather the int reference index and the new data byte
       backRef = readInt(inputInt);
       data = (byte) System.in.read();
+      // resize dictionary arrays if they are full
+      if (index == indexDictionary.length){
+        int[] tempArray = new int[indexDictionary.length*2];
+        System.arraycopy(indexDictionary, 0, tempArray, 0, indexDictionary.length);
+        indexDictionary = tempArray;
+        byte[] tempArray2 = new byte[dataDictionary.length*2];
+        System.arraycopy(dataDictionary, 0, tempArray2, 0, dataDictionary.length);
+        dataDictionary = tempArray2;
+      }
       //save new backRef and data pair at the current index location
       indexDictionary[index] = backRef;
       dataDictionary[index++] = data;
