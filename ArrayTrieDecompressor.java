@@ -43,8 +43,8 @@ public class ArrayTrieDecompressor {
       while (!byteSequence.empty()) {
         System.out.write(byteSequence.pop().byteValue());
       }
-      System.out.flush();
     }
+    System.out.flush();
   }
 
   private static int readInt(int firstByte) throws IOException {
