@@ -8,11 +8,15 @@ public class ArrayTrieCompressor {
   public static void LZ78Encode() throws IOException {
     // initial setup
     int index = 1;
+    int useAnotherBitOnThisIndex = 2;
+    int bitsToEncode = 1;
     int previousIndex = 0;
     int currentIndex = 0;
     ArrayTrie root = new ArrayTrie();
     ArrayTrie currentAT = root;
     byte inputByte = 0;
+    long bitBuffer = 0;
+    int bitBufferLen = 0;
 
     // while there are bytes to read
     for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
@@ -22,9 +26,22 @@ public class ArrayTrieCompressor {
       // create new ArrayTrie there and store the current index with it
       // increment index and reset
       if (currentAT.getChild(inputByte) == null) {
-        outputIntByte(currentIndex, inputByte);
+        // add the current index and the new byte onto the buffer
+        bitBuffer = bitBuffer | (long) currentIndex << bitBufferLen
+            | (long) (inputByte & 0xFF) << (bitBufferLen + bitsToEncode);
+        bitBufferLen += bitsToEncode + 8;
+        // while there are bytes to write in the long buffer, output them
+        while (bitBufferLen >= 8) {
+          System.out.write((byte) bitBuffer);
+          bitBuffer = bitBuffer >>> 8;
+          bitBufferLen -= 8;
+        }
         currentAT.setChild(inputByte, new ArrayTrie());
         currentAT.setValue(inputByte, index++);
+        if (index == useAnotherBitOnThisIndex) {
+          useAnotherBitOnThisIndex *= 2;
+          bitsToEncode++;
+        }
         currentAT = root;
         currentIndex = 0;
       }
@@ -37,21 +54,17 @@ public class ArrayTrieCompressor {
       }
     }
     // if we are part-way through a sequence when input ended
-    // then output the previous sequences index plus the latest byte of data
-    if (currentAT != root){
-      outputIntByte(previousIndex, inputByte);
+    // then update the buffer with the previous sequences index plus the latest byte of data
+    // and flush out the whole buffer until it is empty
+    if (currentAT != root) {
+      bitBuffer = bitBuffer | previousIndex << bitBufferLen | inputByte << bitBufferLen + bitsToEncode;
+      bitBufferLen += bitsToEncode + 8;
+      while (bitBufferLen > 0) {
+        System.out.write((byte) bitBuffer);
+        bitBuffer = bitBuffer >>> 8;
+        bitBufferLen -= 8;
+      }
     }
-  }
-
-  private static void outputIntByte(int outInt, byte outByte) {
-    // TODO bitpacking compression
-    // outputs outInt converted to big endian bytes, followed by outByte
-    byte[] outputByteArray = new byte[5];
-    outputByteArray[0] = (byte) (outInt >> 24);
-    outputByteArray[1] = (byte) (outInt >> 16);
-    outputByteArray[2] = (byte) (outInt >> 8);
-    outputByteArray[3] = (byte) outInt;
-    outputByteArray[4] = outByte;
-    System.out.write(outputByteArray, 0, 5);
+    System.out.flush();
   }
 }
