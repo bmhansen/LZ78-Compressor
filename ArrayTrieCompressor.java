@@ -8,7 +8,7 @@ public class ArrayTrieCompressor {
   public static void LZ78Encode() throws IOException {
     // initial setup
     int index = 1;
-    int useAnotherBitOnThisIndex = 2;
+    int encodeAnotherBitOnThisIndex = 2;
     int bitsToEncode = 1;
     int previousIndex = 0;
     int currentIndex = 0;
@@ -26,7 +26,7 @@ public class ArrayTrieCompressor {
       // create new ArrayTrie there and store the current index with it
       // increment index and reset
       if (currentAT.getChild(inputByte) == null) {
-        // add the current index and the new byte onto the buffer
+        // add the current index and the new input data byte onto the buffer
         bitBuffer = bitBuffer | (long) currentIndex << bitBufferLen
             | (long) (inputByte & 0xFF) << (bitBufferLen + bitsToEncode);
         bitBufferLen += bitsToEncode + 8;
@@ -37,9 +37,10 @@ public class ArrayTrieCompressor {
           bitBufferLen -= 8;
         }
         currentAT.setChild(inputByte, new ArrayTrie());
-        currentAT.setValue(inputByte, index++);
-        if (index == useAnotherBitOnThisIndex) {
-          useAnotherBitOnThisIndex *= 2;
+        currentAT.setValue(inputByte, index);
+        // if the next index requires another bit of information, then increment bitsToEncode
+        if (++index == encodeAnotherBitOnThisIndex) {
+          encodeAnotherBitOnThisIndex *= 2;
           bitsToEncode++;
         }
         currentAT = root;
@@ -55,16 +56,17 @@ public class ArrayTrieCompressor {
     }
     // if we are part-way through a sequence when input ended
     // then update the buffer with the previous sequences index plus the latest byte of data
-    // and flush out the whole buffer until it is empty
     if (currentAT != root) {
       bitBuffer = bitBuffer | previousIndex << bitBufferLen | inputByte << bitBufferLen + bitsToEncode;
       bitBufferLen += bitsToEncode + 8;
-      while (bitBufferLen > 0) {
-        System.out.write((byte) bitBuffer);
-        bitBuffer = bitBuffer >>> 8;
-        bitBufferLen -= 8;
-      }
     }
+    // flush out the whole buffer until it is empty
+    while (bitBufferLen > 0) {
+      System.out.write((byte) bitBuffer);
+      bitBuffer = bitBuffer >>> 8;
+      bitBufferLen -= 8;
+    }
+    
     System.out.flush();
   }
 }
