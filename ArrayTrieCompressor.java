@@ -8,41 +8,27 @@ public class ArrayTrieCompressor {
   public static void LZ78Encode() throws IOException {
     // initial setup
     int index = 1;
-    int encodeAnotherBitOnThisIndex = 2;
-    int bitsToEncode = 1;
     int previousIndex = 0;
     int currentIndex = 0;
     ArrayTrie root = new ArrayTrie();
     ArrayTrie currentAT = root;
     byte inputByte = 0;
-    long bitBuffer = 0;
-    int bitBufferLen = 0;
 
     // while there are bytes to read
+    BitPacker bp = new BitPacker();
     for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
       inputByte = (byte) inputInt;
       // if the byte has not been seen before in this sequence
-      // then encode the index from the end of the sequence + the new byte
-      // create new ArrayTrie there and store the current index with it
-      // increment index and reset
+      // then encode the backRef from the end of the sequence + the new byte
+      // create new ArrayTrie there and store the current backRef with it
+      // increment backRef and reset
       if (currentAT.getChild(inputByte) == null) {
         // add the current index and the new input data byte onto the buffer
-        bitBuffer = bitBuffer | (long) currentIndex << bitBufferLen
-            | (long) (inputByte & 0xFF) << (bitBufferLen + bitsToEncode);
-        bitBufferLen += bitsToEncode + 8;
-        // while there are bytes to write in the long buffer, output them
-        while (bitBufferLen >= 8) {
-          System.out.write((byte) bitBuffer);
-          bitBuffer = bitBuffer >>> 8;
-          bitBufferLen -= 8;
-        }
+        bp.write(currentIndex, inputByte);
+
         currentAT.setChild(inputByte, new ArrayTrie());
         currentAT.setValue(inputByte, index);
-        // if the next index requires another bit of information, then increment bitsToEncode
-        if (++index == encodeAnotherBitOnThisIndex) {
-          encodeAnotherBitOnThisIndex *= 2;
-          bitsToEncode++;
-        }
+
         currentAT = root;
         currentIndex = 0;
       }
@@ -55,18 +41,11 @@ public class ArrayTrieCompressor {
       }
     }
     // if we are part-way through a sequence when input ended
-    // then update the buffer with the previous sequences index plus the latest byte of data
+    // then update the buffer with the previous sequences backRef plus the latest byte of data
     if (currentAT != root) {
-      bitBuffer = bitBuffer | previousIndex << bitBufferLen | inputByte << bitBufferLen + bitsToEncode;
-      bitBufferLen += bitsToEncode + 8;
+      bp.write(previousIndex, inputByte);
     }
-    // flush out the whole buffer until it is empty
-    while (bitBufferLen > 0) {
-      System.out.write((byte) bitBuffer);
-      bitBuffer = bitBuffer >>> 8;
-      bitBufferLen -= 8;
-    }
-    
-    System.out.flush();
+    // if there was any bitpacked data not sent, this flush sends it
+    bp.flush();
   }
 }

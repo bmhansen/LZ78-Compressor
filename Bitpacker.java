@@ -1,52 +1,54 @@
-import java.net.*;
-import java.io.*;
-import java.util.*;
+public class BitPacker {
 
-public class Bitpacker {
+  // bitpacked data will be written to and will queue up in this buffer
+  // a long was chosen because it needs to hold a large int (up to 32bits)  
+  // plus any left over bits not flushed and waiting to be output (up to 7)
+  // it's a first-in first-out queue where it builds from the least significant bit
+  long bitBuffer = 0;
+  // the number of bits in use in the buffer
+  int bitsInUse = 0;
 
-	public static void main(String[] args) throws Exception {
-		int dictionaryIndex = 0;
+  // number of bits needed to minimally encode the backRef
+  int minBitsToEncode = 0;
+  // the number of writes that have occured (also the max possible backRef)
+  int numberOfWrites = 0;
+  // update minBitsToEncode when this matches numberOfWrites
+  int encodeAnotherBitOn = 1;
 
-		InputStream input = System.in;
-		PrintStream output = System.out;
+  public void write(int i, byte b) {
+    // adds the backRef onto the buffer, bitpacks it to the minimal number of bits needed to encode it
+    bitBuffer |= (long) (b & 0xFFFFFFFF) << bitsInUse;
+    bitsInUse += minBitsToEncode;
+    // adds the new data byte onto the buffer, no bitpacking as all 8 bits are needed
+    bitBuffer |= (long) (b & 0xFF) << bitsInUse;
+    bitsInUse += 8;
 
-		int i = 0;
-		int addAnotherBit = 2;
-		int numberOfBits = 1;
-		int toOutputBits = 0;
-		int toOutput = 0;
+    // while there is at least 8 bits of data to write in the buffer, output it in bytes
+    while (bitsInUse >= 8) {
+      output();
+    }
 
-		int ref = 0;
-		byte data = 0;
+    numberOfWrites++;
+    // if the next backRef requires another bit of information, then increment minBitsToEncode
+    if (numberOfWrites == encodeAnotherBitOn) {
+      minBitsToEncode++;
+      encodeAnotherBitOn *= 2;
+    }
+  }
 
-		while ((i = input.read()) != -1 || dictionaryIndex < 2) {
-			ref = ((byte) i & 0xFF) << 24 | ((byte) input.read() & 0xFF) << 16 | ((byte) input.read() & 0xFF) << 8
-					| ((byte) input.read() & 0xFF);
-			data = (byte) input.read();
+  // force flushes all bits in the buffer until empty
+  // pads with zeros on the most significant bits if necessary
+  public void flush() {
+    while (bitsInUse > 0) {
+      output();
+      System.out.flush();
+    }
+  }
 
-			System.out.println(ref + " " + data);
-
-			if (dictionaryIndex == addAnotherBit) {
-				System.out.println(addAnotherBit + " " + numberOfBits + " " + dictionaryIndex);
-				addAnotherBit = addAnotherBit * 2;
-				numberOfBits++;
-			}
-
-			ref = ref << (32 - numberOfBits + toOutputBits);
-			toOutput = toOutput | ref;
-			toOutputBits = toOutputBits + numberOfBits;
-			while (toOutputBits > 8) {
-				output.write(toOutput >> 24);
-				System.out.println(toOutput >> 24);
-				toOutput = toOutput << 8;
-				toOutputBits = toOutputBits - 8;
-			}
-			toOutput = toOutput | (data << (24 - toOutputBits));
-			output.write(toOutput >> 24);
-			System.out.println(toOutput >> 24);
-			toOutput = toOutput << 8;
-
-			dictionaryIndex++;
-		}
-	}
+  // outputs a byte from the buffer onto the output stream
+  private void output() {
+    System.out.write((byte) bitBuffer);
+    bitBuffer >>>= 8;
+    bitsInUse -= 8;
+  }
 }
