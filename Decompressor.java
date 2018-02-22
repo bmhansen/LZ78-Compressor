@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.util.Stack;
 
-public class ArrayTrieDecompressor {
+public class Decompressor {
   public static void main(String[] args) throws IOException {
     LZ78Decode();
   }
