@@ -1,7 +1,7 @@
 public class BitPacker {
 
   // bitpacked data will be written to and will queue up in this buffer
-  // a long was chosen because it needs to hold a large int (up to 32bits)  
+  // a long was chosen because it needs to hold a byte, (8 bits) plus a large int (up to 32bits)  
   // plus any left over bits not flushed and waiting to be output (up to 7)
   // it's a first-in first-out queue where it builds from the least significant bit
   long bitBuffer = 0;

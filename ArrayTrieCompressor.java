@@ -6,46 +6,58 @@ public class ArrayTrieCompressor {
   }
 
   public static void LZ78Encode() throws IOException {
-    // initial setup
-    int index = 1;
-    int previousIndex = 0;
-    int currentIndex = 0;
+    // Initial setup
+
+    // The root ArrayTrie used to store all byte sequences as back references
     ArrayTrie root = new ArrayTrie();
+    // The current ArrayTrie being worked with
     ArrayTrie currentAT = root;
+    // An instance of the BitPacker class is created to be used in bit packing the results of encoding
+    BitPacker bp = new BitPacker();
+    // The next new back reference to be created
+    int newBackRef = 1;
+    // The current depth's back reference
+    // corresponds to the current byte sequence (0 being root, the empty sequence)
+    int currentBackRef = 0;
+    // The parent of the current depth's back reference
+    int parentBackRef = 0;
+    // The latest byte read from input
     byte inputByte = 0;
 
-    // while there are bytes to read
-    BitPacker bp = new BitPacker();
+    // While there are bytes to read
     for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
       inputByte = (byte) inputInt;
-      // if the byte has not been seen before in this sequence
-      // then encode the backRef from the end of the sequence + the new byte
-      // create new ArrayTrie there and store the current backRef with it
-      // increment backRef and reset
-      if (currentAT.getChild(inputByte) == null) {
-        // add the current index and the new input data byte onto the buffer
-        bp.write(currentIndex, inputByte);
 
-        currentAT.setChild(inputByte, new ArrayTrie());
-        currentAT.setValue(inputByte, index);
-
-        currentAT = root;
-        currentIndex = 0;
-      }
-      // else the byte sequence must have been seen before
-      // so continue at the next depth from this byte
-      else {
-        previousIndex = currentIndex;
-        currentIndex = currentAT.getValue(inputByte);
+      // if the input byte has been seen before after this sequence
+      if (currentAT.getChild(inputByte) != null) {
+        // continue at the next depth
+        parentBackRef = currentBackRef;
+        currentBackRef = currentAT.getValue(inputByte);
         currentAT = currentAT.getChild(inputByte);
+        continue;
       }
+
+      // If the input byte has not been seen before after this sequence
+      if (currentAT.getChild(inputByte) == null) {
+        // Rhen bit pack the back reference of the sequence along with the new byte
+        bp.write(currentBackRef, inputByte);
+
+        // Create new ArrayTrie for the sequence not seen before and assign it a new back reference
+        currentAT.setChild(inputByte, new ArrayTrie());
+        currentAT.setValue(inputByte, newBackRef++);
+
+        // Reset the sequence back to the root
+        currentAT = root;
+        currentBackRef = 0;
+      }
+
     }
-    // if we are part-way through a sequence when input ended
-    // then update the buffer with the previous sequences backRef plus the latest byte of data
+    // If we are part-way through a sequence when input ended
     if (currentAT != root) {
-      bp.write(previousIndex, inputByte);
+      // Bit pack the parent sequence's backRef with the last byte of data
+      bp.write(parentBackRef, inputByte);
     }
-    // if there was any bitpacked data not sent, this flush sends it
+    // If there was any bit packed data not sent, this flush sends it
     bp.flush();
   }
 }
