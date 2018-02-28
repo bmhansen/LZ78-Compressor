@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.io.OutputStream;
+
 public class BitPacker {
 
   // bitpacked data will be written to and will queue up in this buffer
@@ -14,8 +17,15 @@ public class BitPacker {
   int numberOfWrites = 0;
   // update minBitsToEncode when this matches numberOfWrites
   int encodeAnotherBitOn = 1;
+  // The output stream to write to
+  OutputStream out;
 
-  public void write(int i, byte b) {
+  // constructor that assigns the output stream to one provided
+  BitPacker(OutputStream o) {
+    out = o;
+  }
+
+  public void write(int i, byte b) throws IOException {
     // adds the backRef onto the buffer, bitpacks it to the minimal number of bits needed to encode it
     bitBuffer |= (long) (b & 0xFFFFFFFF) << bitsInUse;
     bitsInUse += minBitsToEncode;
@@ -38,16 +48,16 @@ public class BitPacker {
 
   // force flushes all bits in the buffer until empty
   // pads with zeros on the most significant bits if necessary
-  public void flush() {
+  public void flush() throws IOException {
     while (bitsInUse > 0) {
       output();
-      System.out.flush();
+      out.flush();
     }
   }
 
   // outputs a byte from the buffer onto the output stream
-  private void output() {
-    System.out.write((byte) bitBuffer);
+  private void output() throws IOException {
+    out.write((byte) bitBuffer);
     bitBuffer >>>= 8;
     bitsInUse -= 8;
   }

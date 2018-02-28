@@ -1,11 +1,13 @@
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 public class ArrayTrieCompressor {
   public static void main(String[] args) throws IOException {
-    LZ78Encode();
+    LZ78Encode(System.in, System.out);
   }
 
-  public static void LZ78Encode() throws IOException {
+  public static void LZ78Encode(InputStream in, OutputStream out) throws IOException {
     // Initial setup
 
     // The root ArrayTrie used to store all byte sequences as back references
@@ -13,7 +15,7 @@ public class ArrayTrieCompressor {
     // The current ArrayTrie being worked with
     ArrayTrie currentAT = root;
     // An instance of the BitPacker class is created to be used in bit packing the results of encoding
-    BitPacker bp = new BitPacker();
+    BitPacker bp = new BitPacker(out);
     // The next new back reference to be created
     int newBackRef = 1;
     // The current depth's back reference
@@ -25,7 +27,7 @@ public class ArrayTrieCompressor {
     byte inputByte = 0;
 
     // While there are bytes to read
-    for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
+    for (int inputInt = in.read(); inputInt >= 0; inputInt = in.read()) {
       inputByte = (byte) inputInt;
 
       // if the input byte has been seen before after this sequence
