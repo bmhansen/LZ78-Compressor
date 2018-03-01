@@ -7,7 +7,6 @@ public class BitUnpacker {
   long bitBuffer = 0;
   // the number of bits in use in the buffer
   int bitsInUse = 0;
-  long extractionBuffer;
 
   // number of bits needed to minimally decode the backRef
   int minBitsToDecode = 0;
@@ -19,6 +18,15 @@ public class BitUnpacker {
   // backRef and dataByte pair extracted from unpacking a stream of bytes
   int backRef = 0;
   byte dataByte = 0;
+  long extractionBuffer = 0;
+
+  // The input stream to read from
+  InputStream in = null;
+
+  // constructor that assigns the output stream to one provided
+  BitUnpacker(InputStream inStream) {
+    in = inStream;
+  }
 
   // reads the input until it can unpack a backRef, data byte pair
   public boolean read() {
