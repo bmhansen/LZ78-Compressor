@@ -12,37 +12,37 @@ public class BitPacker {
   int bitsInUse = 0;
 
   // number of bits needed to minimally encode the backRef
-  int minBitsToEncode = 0;
+  int minBitsToEncode = 1;
   // the number of writes that have occured (also the max possible backRef)
   int numberOfWrites = 0;
   // update minBitsToEncode when this matches numberOfWrites
-  int encodeAnotherBitOn = 1;
+  int encodeAnotherBitOn = 2;
   // The output stream to write to
-  OutputStream out;
+  OutputStream out = null;
 
   // constructor that assigns the output stream to one provided
-  BitPacker(OutputStream o) {
-    out = o;
+  BitPacker(OutputStream outStream) {
+    out = outStream;
   }
 
   public void write(int i, byte b) throws IOException {
     // adds the backRef onto the buffer, bitpacks it to the minimal number of bits needed to encode it
-    bitBuffer |= (long) (b & 0xFFFFFFFF) << bitsInUse;
+    bitBuffer |= (long) (i & 0xFFFFFFFF) << bitsInUse;
     bitsInUse += minBitsToEncode;
     // adds the new data byte onto the buffer, no bitpacking as all 8 bits are needed
     bitBuffer |= (long) (b & 0xFF) << bitsInUse;
     bitsInUse += 8;
-
-    // while there is at least 8 bits of data to write in the buffer, output it in bytes
-    while (bitsInUse >= 8) {
-      output();
-    }
 
     numberOfWrites++;
     // if the next backRef requires another bit of information, then increment minBitsToEncode
     if (numberOfWrites == encodeAnotherBitOn) {
       minBitsToEncode++;
       encodeAnotherBitOn *= 2;
+    }
+
+    // while there is at least 8 bits of data to write in the buffer, output it in bytes
+    while (bitsInUse >= 8) {
+      output();
     }
   }
 
@@ -51,8 +51,8 @@ public class BitPacker {
   public void flush() throws IOException {
     while (bitsInUse > 0) {
       output();
-      out.flush();
     }
+    out.flush();
   }
 
   // outputs a byte from the buffer onto the output stream

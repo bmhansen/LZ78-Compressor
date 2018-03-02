@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.io.InputStream;
+
 public class BitUnpacker {
 
   // bitpacked data will be read into and will queue up in this buffer
@@ -9,11 +12,11 @@ public class BitUnpacker {
   int bitsInUse = 0;
 
   // number of bits needed to minimally decode the backRef
-  int minBitsToDecode = 0;
+  int minBitsToDecode = 1;
   // the number of writes that have occured (also the max possible backRef)
   int numberOfReads = 0;
   // update minBitsToDecode when this matches numberOfReads
-  int decodeAnotherBitOn = 1;
+  int decodeAnotherBitOn = 2;
 
   // backRef and dataByte pair extracted from unpacking a stream of bytes
   int backRef = 0;
@@ -29,8 +32,8 @@ public class BitUnpacker {
   }
 
   // reads the input until it can unpack a backRef, data byte pair
-  public boolean read() {
-    for (int inputInt = System.in.read(); inputInt >= 0; inputInt = System.in.read()) {
+  public boolean read() throws IOException {
+    for (int inputInt = in.read(); inputInt >= 0; inputInt = in.read()) {
       // add them to the buffer
       bitBuffer = bitBuffer | (long) inputInt << bitsInUse;
       bitsInUse += 8;
@@ -43,7 +46,7 @@ public class BitUnpacker {
         bitsInUse -= minBitsToDecode;
         // isolate the data byte from the buffer
         extractionBuffer = (bitBuffer << 64 - 8) >>> 64 - 8;
-        data = (byte) extractionBuffer;
+        dataByte = (byte) extractionBuffer;
         bitBuffer >>>= 8;
         bitsInUse -= 8;
 
