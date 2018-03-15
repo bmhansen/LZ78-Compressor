@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class BitPacker {
+public class BitPacker implements Packer {
 
   // bitpacked data will be written to and will queue up in this buffer
   // a long was chosen because it needs to hold a byte, (8 bits) plus a large int (up to 32bits)  
