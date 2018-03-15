@@ -1,6 +1,6 @@
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-
+import static org.junit.Assert.assertArrayEquals;
 import java.beans.Transient;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,39 +10,37 @@ public class TestAll {
 
   @Test
   public void testEmpty() throws Exception {
-    testStream(new byte[] {});
+    testByteArray(new byte[] {});
   }
 
   @Test
   public void testSmallStream() throws Exception {
-    testStream(new byte[] {-128, 0, 127, 65, 66, 65, 67, 67, 67, 68, 65});
+    testByteArray(new byte[] { -128, 0, 127, 65, 66, 65, 67, 67, 67, 68, 65 });
   }
 
-  
-  public void testStream(byte[] streamToTest) throws Exception {
-    ByteArrayInputStream in = new ByteArrayInputStream(streamToTest);
+  private void testByteArray(byte[] inputByteArray) throws Exception {
+    ByteArrayInputStream in = new ByteArrayInputStream(inputByteArray);
 
-    // Feed stream into ArrayTrieCompressor and BSTCompressor, verify they output the same
+    // Feed stream into ArrayTrieCompressor and BSTCompressor, verify both outputs are the same
     ByteArrayOutputStream outAT = new ByteArrayOutputStream();
-    ArrayTrieCompressor.LZ78Encode(in, outAT);
+    BitPacker packerAT = new BitPacker(outAT);
+    ArrayTrieCompressor.LZ78Encode(in, packerAT);
     byte[] outBytesAT = outAT.toByteArray();
     in.reset();
     ByteArrayOutputStream outBST = new ByteArrayOutputStream();
-    BSTCompressor.LZ78Encode(in, outBST);
+    BitPacker packerBST = new BitPacker(outBST);
+    BSTCompressor.LZ78Encode(in, packerBST);
     byte[] outBytesBST = outBST.toByteArray();
-    for (int i = 0; i < outBytesAT.length - 1; i++){
-      System.err.println(i);
-      assertEquals(outBytesAT[i], outBytesBST[i]);
-    }
+    assertArrayEquals(outBytesAT, outBytesBST);
 
-    // Feed the compressor's output into the Decompressor and verify it returns the original stream
+    // Feed the compressor's output into the Decompressor, verify it returns the original stream
     ByteArrayInputStream in2 = new ByteArrayInputStream(outBytesAT);
     ByteArrayOutputStream out2 = new ByteArrayOutputStream();
     Decompressor.LZ78Decode(in2, out2);
     byte[] outBytes2 = out2.toByteArray();
-    assertEquals(streamToTest.length, outBytes2.length);
-    for (int i = 0; i < streamToTest.length - 1; i++){
-      assertEquals(streamToTest[i], outBytes2[i]);
+    assertEquals(inputByteArray.length, outBytes2.length);
+    for (int i = 0; i < inputByteArray.length - 1; i++) {
+      assertEquals(inputByteArray[i], outBytes2[i]);
     }
   }
 
