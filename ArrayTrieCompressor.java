@@ -4,18 +4,16 @@ import java.io.OutputStream;
 
 public class ArrayTrieCompressor {
   public static void main(String[] args) throws IOException {
-    LZ78Encode(System.in, System.out);
+    LZ78Encode(System.in, new BitPacker(System.out));
   }
 
-  public static void LZ78Encode(InputStream in, OutputStream out) throws IOException {
+  public static void LZ78Encode(InputStream in, Packer packer) throws IOException {
     // Initial setup
 
     // The root ArrayTrie used to store all byte sequences as back references
     ArrayTrie root = new ArrayTrie();
     // The current ArrayTrie being worked with
     ArrayTrie currentAT = root;
-    // An instance of the BitPacker class is created to be used in bit packing the results of encoding
-    BitPacker bp = new BitPacker(out);
     // The next new back reference to be created
     int newBackRef = 1;
     // The current depth's back reference
@@ -42,7 +40,7 @@ public class ArrayTrieCompressor {
       // If the input byte has not been seen after this sequence
       if (currentAT.getChild(inputByte) == null) {
         // Bit pack the back reference of the sequence along with the new byte
-        bp.write(currentBackRef, inputByte);
+        packer.write(currentBackRef, inputByte);
 
         // Create a new ArrayTrie for the sequence not seen before and assign it a new back reference
         currentAT.setChild(inputByte, new ArrayTrie());
@@ -56,9 +54,9 @@ public class ArrayTrieCompressor {
     // If we are part-way through a sequence when the input ends
     if (currentAT != root) {
       // Bit pack the parent sequence's backRef with the last byte of data
-      bp.write(parentBackRef, inputByte);
+      packer.write(parentBackRef, inputByte);
     }
     // If there was any bit packed data not sent, this flush sends it
-    bp.flush();
+    packer.flush();
   }
 }

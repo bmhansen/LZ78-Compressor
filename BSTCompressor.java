@@ -4,10 +4,10 @@ import java.io.OutputStream;
 
 public class BSTCompressor {
   public static void main(String[] args) throws IOException {
-    LZ78Encode(System.in, System.out);
+    LZ78Encode(System.in, new BitPacker(System.out));
   }
 
-  public static void LZ78Encode(InputStream in, OutputStream out) throws IOException {
+  public static void LZ78Encode(InputStream in, Packer packer) throws IOException {
     // Initial setup
 
     // The root BST used to store all byte sequences as back references
@@ -16,8 +16,6 @@ public class BSTCompressor {
     BSTrie currentDepth = root;
     // The parent byte sequence of the currentDepth byte sequence
     BSTrie parentDepth = root;
-    // An instance of the BitPacker class is created to be used in bit packing the results of encoding
-    BitPacker bp = new BitPacker(out);
     // The next new back reference to be created
     int newBackRef = 1;
     // The latest byte read from input
@@ -54,7 +52,7 @@ public class BSTCompressor {
       }
 
       // Bit pack the back reference of the sequence along with the new byte
-      bp.write(currentDepth.backRef, inputByte);
+      packer.write(currentDepth.backRef, inputByte);
       // Reset sequence back to the root
       currentDepth = root;
     }
@@ -62,9 +60,9 @@ public class BSTCompressor {
     // If we are part-way through a sequence when the input ends
     if (currentDepth != root) {
       // Bit pack the parent sequence's backRef with the last byte of data
-      bp.write(parentDepth.backRef, inputByte);
+      packer.write(parentDepth.backRef, inputByte);
     }
     // If there was any bit packed data not sent, this flush sends it
-    bp.flush();
+    packer.flush();
   }
 }
