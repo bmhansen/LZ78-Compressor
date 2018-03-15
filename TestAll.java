@@ -1,7 +1,7 @@
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
-import java.beans.Transient;
+import java.util.Random;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,7 +15,12 @@ public class TestAll {
 
   @Test
   public void testSmallStream() throws Exception {
-    testByteArray(new byte[] { -128, 0, 127, 65, 66, 65, 67, 67, 67, 68, 65 });
+    Random rand = new Random();
+    for (int i = 0; i < 1000; i++){
+      byte[] randomByteArray = new byte[1024];
+      rand.nextBytes(randomByteArray);
+      testByteArray(randomByteArray);
+    }
   }
 
   private void testByteArray(byte[] inputByteArray) throws Exception {
