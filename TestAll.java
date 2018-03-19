@@ -14,11 +14,14 @@ public class TestAll {
   }
 
   @Test
-  public void testSmallStream() throws Exception {
+  // Does many tests on random byte sequences, where the bytes can be 0 or 1
+  public void testSmallStreams() throws Exception {
     Random rand = new Random();
-    for (int i = 0; i < 1000; i++){
+    for (int i = 0; i < 100000; i++) {
       byte[] randomByteArray = new byte[1024];
-      rand.nextBytes(randomByteArray);
+      for (int j = 0; j < randomByteArray.length; j++) {
+        randomByteArray[j] = (byte) rand.nextInt(2);
+      }
       testByteArray(randomByteArray);
     }
   }
@@ -39,14 +42,11 @@ public class TestAll {
     assertArrayEquals(outBytesAT, outBytesBST);
 
     // Feed the compressor's output into the Decompressor, verify it returns the original stream
-    ByteArrayInputStream in2 = new ByteArrayInputStream(outBytesAT);
+    ByteArrayInputStream in2 = new ByteArrayInputStream(outBytesBST);
     ByteArrayOutputStream out2 = new ByteArrayOutputStream();
     Decompressor.LZ78Decode(in2, out2);
     byte[] outBytes2 = out2.toByteArray();
-    assertEquals(inputByteArray.length, outBytes2.length);
-    for (int i = 0; i < inputByteArray.length - 1; i++) {
-      assertEquals(inputByteArray[i], outBytes2[i]);
-    }
+    assertArrayEquals(inputByteArray, outBytes2);
   }
 
 }
