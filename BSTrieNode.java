@@ -1,19 +1,21 @@
 public class BSTrieNode {
-	byte dataByte = 0;
-	BSTrieNode left = null;
-	BSTrieNode right = null;
-	BSTrie nextDepth = null;
+	byte dataByte;
+	int backRef;
+	BSTrieNode left;
+	BSTrieNode right;
+	BSTrieNode nextLevel;
 
-	public BSTrieNode(){}
+	public BSTrieNode() {
+	}
 
-	public BSTrieNode(byte dByte, int backRef) {
-    dataByte = dByte;
-    nextDepth = new BSTrie(backRef);
-  }
+	public BSTrieNode(byte dataByte, int backRef) {
+		this.dataByte = dataByte;
+		this.backRef = backRef;
+	}
 
-  // searches this BSTrieNode and all subtries (left and right)
-  // returns either the BST that matches toFind, or returns the parent of where it should be inserted
-	public BSTrieNode find(byte toFind) {
+	// searches this BSTrieNode and all subtries (left and right)
+	// returns either the BST that matches toFind, or returns the parent of where it should be inserted
+	public BSTrieNode getMatchOrInsert(byte toFind, int backRef) {
 		// if this BSTrie matches the byte then return it
 		if (dataByte == toFind) {
 			return this;
@@ -22,22 +24,24 @@ public class BSTrieNode {
 		else if (toFind < dataByte) {
 			// if there is a left subtrie, search it
 			if (left != null) {
-				return left.find(toFind);
+				return left.getMatchOrInsert(toFind, backRef);
 			}
-			// left subtrie not found, so return where it should be inserted
+			// left subtrie not found, so insert it here and return null
 			else {
-				return this;
+				this.left = new BSTrieNode(toFind, backRef);
+				return null;
 			}
 		}
 		// else the dataByte must be greater than toFind
 		else {
 			// if there is a right subtrie, search it
 			if (right != null) {
-				return right.find(toFind);
+				return right.getMatchOrInsert(toFind, backRef);
 			}
-			// right subtrie not found, so return where it should be inserted
+			// right subtrie not found, so insert it here and return null
 			else {
-				return this;
+				this.right = new BSTrieNode(toFind, backRef);
+				return null;
 			}
 		}
 	}
