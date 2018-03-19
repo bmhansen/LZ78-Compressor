@@ -10,14 +10,16 @@ public class BSTCompressor {
   public static void LZ78Encode(InputStream in, Packer packer) throws IOException {
     // Initial setup
 
-    // The root BST used to store all byte sequences as back references
-    BSTrie root = new BSTrie(0);
-    // The current byte sequence depth being worked with
-    BSTrie currentDepth = root;
-    // The parent byte sequence of the currentDepth byte sequence
-    BSTrie parentDepth = root;
+    // The root BSTrieNode which has a backRef of 0 and symbolically holds the empty byte
+    BSTrieNode root = new BSTrieNode();
+    // The current node Level being worked with
+    BSTrieNode currentLevel = root.nextLevel;
+    // The parent node of the currentLevel
+    BSTrieNode parentNode = root;
+    // The parent of the parent node, is only used when the stream ends midway through traversing the dictionary
+    BSTrieNode grandParentNode = root;
     // The next new back reference to be created
-    int newBackRef = 1;
+    int nextBackRef = 1;
     // The latest byte read from input
     byte inputByte = 0;
     // The found BSTrieNode that either matches the inputbyte, or is the parent of where it should be inserted
@@ -27,40 +29,36 @@ public class BSTCompressor {
     for (int inputInt = in.read(); inputInt >= 0; inputInt = in.read()) {
       inputByte = (byte) inputInt;
 
-      // Check there are any nodes on this BSTrie to search
-      if (currentDepth.rootNode != null) {
-        // Search the BSTrie for any nodes that match the inputByte
-        found = currentDepth.find(inputByte);
-        // If the inputByte has been seen after this sequence, search the next depth
-        if (inputByte == found.dataByte) {
-          parentDepth = currentDepth;
-          currentDepth = found.nextDepth;
+      // If there are no nodes on the next level, add the first one with this inputByte
+      if (currentLevel == null) {
+        parentNode.nextLevel = new BSTrieNode(inputByte, nextBackRef++);
+      }
+
+      // Since there are nodes, search through them trying to match the inputByte
+      else {
+        found = currentLevel.getMatchOrInsert(inputByte, nextBackRef);
+        // If the inputByte was found after this sequence, search the next level
+        if (found != null) {
+          grandParentNode = parentNode;
+          parentNode = found;
+          currentLevel = found.nextLevel;
           continue;
         }
-        // The byte needs to be inserted on the left BSTrieNode
-        else if (inputByte < found.dataByte) {
-          found.left = new BSTrieNode(inputByte, newBackRef++);
-        }
-        // the byte needs to be inserted on the right BSTrieNode
-        else {
-          found.right = new BSTrieNode(inputByte, newBackRef++);
-        }
-      }
-      // Else this means there are no nodes on this BSTrie, add the first one with this inputByte
-      else {
-        currentDepth.rootNode = new BSTrieNode(inputByte, newBackRef++);
+        // the inputByte was not found so it was inserted and nextBackRef now needs to be incremented
+        nextBackRef++;
       }
 
       // Bit pack the back reference of the sequence along with the new byte
-      packer.write(currentDepth.backRef, inputByte);
-      // Reset sequence back to the root
-      currentDepth = root;
+      packer.write(parentNode.backRef, inputByte);
+      // Reset sequence back to the start
+      currentLevel = root.nextLevel;
+      parentNode = root;
     }
 
     // If we are part-way through a sequence when the input ends
-    if (currentDepth != root) {
+    if (currentLevel != root.nextLevel) {
       // Bit pack the parent sequence's backRef with the last byte of data
-      packer.write(parentDepth.backRef, inputByte);
+      packer.write(grandParentNode.backRef, inputByte);
     }
     // If there was any bit packed data not sent, this flush sends it
     packer.flush();
