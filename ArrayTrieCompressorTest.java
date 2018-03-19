@@ -25,15 +25,15 @@ public class ArrayTrieCompressorTest {
 
   @Test
   public void testBuildsAndUsesDictionary() throws Exception {
-    byte[] in = new byte[] { 65, 65, 66, 65, 66, 67 };
-    byte[] out = new byte[] { 0, 65, 1, 66, 2, 67 };
+    byte[] in = new byte[] { 65, 65, 66, 65, 66, 67, 66, 66, 66 };
+    byte[] out = new byte[] { 0, 65, 1, 66, 2, 67, 0, 66, 4, 66 };
     assertArrayProducedFromArray(out, in);
   }
 
   @Test
-  public void testStreamEndsPartwayThroughSeenSequence() throws Exception {
-    byte[] in = new byte[] { 65, 65 };
-    byte[] out = new byte[] { 0, 65, 0, 65 };
+  public void testStreamEndsPartwayThroughDictionarySequence() throws Exception {
+    byte[] in = new byte[] { 65, 65, 66, 65, 66 };
+    byte[] out = new byte[] { 0, 65, 1, 66, 1, 66 };
     assertArrayProducedFromArray(out, in);
   }
 
